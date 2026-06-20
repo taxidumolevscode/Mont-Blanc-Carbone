@@ -1,7 +1,7 @@
 export const siteMeta = {
   brand: "Mont Blanc Carbone",
   siteName: "Mont Blanc Carbone",
-  siteUrl: "https://montblanccarbone.com",
+  siteUrl: "https://montblanccarbon.com",
   phoneDisplay: "06 80 42 30 31",
   phoneHref: "tel:+33680423031",
   email: "contact@montblanccarbone.com",
