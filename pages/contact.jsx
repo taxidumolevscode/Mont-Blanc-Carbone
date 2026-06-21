@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import FadeIn from "../components/animations/FadeIn";
 import SeoHead from "../components/layout/SeoHead";
 import SiteLayout from "../components/layout/SiteLayout";
@@ -21,36 +21,40 @@ const initialForm = {
 export default function ContactPage() {
   const [form, setForm] = useState(initialForm);
   const [sent, setSent] = useState(false);
-
-  const mailtoHref = useMemo(() => {
-    const subject = `Demande de devis Mont Blanc Carbone - ${form.product || "materiaux carbone"}`;
-    const body = [
-      `Nom / Prenom : ${form.name}`,
-      `Entreprise : ${form.company}`,
-      `Telephone : ${form.phone}`,
-      `Email : ${form.email}`,
-      `Produit : ${form.product}`,
-      `Epaisseur / tissu souhaite : ${form.thickness}`,
-      `Quantite : ${form.quantity}`,
-      `Application : ${form.application}`,
-      `Delai souhaite : ${form.deadline}`,
-      "",
-      "Message :",
-      form.message,
-    ].join("\n");
-
-    return `${siteMeta.emailHref}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  }, [form]);
+  const [error, setError] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   const updateField = (event) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setSent(true);
-    window.location.href = mailtoHref;
+    setSent(false);
+    setError("");
+    setIsSending(true);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (!response.ok) {
+        throw new Error("Contact request failed");
+      }
+
+      setSent(true);
+      setForm(initialForm);
+    } catch (sendError) {
+      setError("Erreur lors de l'envoi. Merci de reessayer ou de nous appeler directement.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -90,7 +94,7 @@ export default function ContactPage() {
                   </p>
                   <p>{siteMeta.address}</p>
                   <p>
-                    Pour une reponse precise, ajoutez une photo, un croquis ou les contraintes principales dans votre email apres ouverture de votre messagerie.
+                    Le formulaire transmet automatiquement votre demande. Pour une reponse plus precise, ajoutez les contraintes principales du projet.
                   </p>
                 </div>
               </aside>
@@ -147,12 +151,21 @@ export default function ContactPage() {
                 </div>
 
                 <div className="mt-7 flex flex-col md:flex-row md:items-center gap-4">
-                  <button type="submit" className="inline-flex justify-center bg-black text-white px-8 py-4 text-sm font-bold uppercase tracking-[0.18em] hover:bg-neutral-800">
-                    Envoyer la demande
+                  <button
+                    type="submit"
+                    disabled={isSending}
+                    className="inline-flex justify-center bg-black text-white px-8 py-4 text-sm font-bold uppercase tracking-[0.18em] hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSending ? "Envoi en cours..." : "Envoyer la demande"}
                   </button>
                   {sent && (
                     <p className="text-sm text-green-700">
-                      Votre messagerie va s&apos;ouvrir avec la demande pre-remplie.
+                      Demande envoyee. Nous revenons vers vous rapidement.
+                    </p>
+                  )}
+                  {error && (
+                    <p className="text-sm text-red-700">
+                      {error}
                     </p>
                   )}
                 </div>
