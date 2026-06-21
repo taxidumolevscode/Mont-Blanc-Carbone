@@ -1,4 +1,3 @@
-const CONTACT_TO_EMAIL = "taxidumole@gmail.com";
 const FALLBACK_FROM_EMAIL = "Mont Blanc Carbone <onboarding@resend.dev>";
 
 const clean = (value) => String(value || "").trim();
@@ -27,10 +26,11 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.RESEND_API_KEY;
+  const toEmail = process.env.CONTACT_TO_EMAIL;
 
-  if (!apiKey) {
+  if (!apiKey || !toEmail) {
     return res.status(500).json({
-      error: "Missing RESEND_API_KEY",
+      error: "Missing email configuration",
     });
   }
 
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     },
     body: JSON.stringify({
       from: process.env.CONTACT_FROM_EMAIL || FALLBACK_FROM_EMAIL,
-      to: process.env.CONTACT_TO_EMAIL || CONTACT_TO_EMAIL,
+      to: toEmail,
       reply_to: email,
       subject,
       text,
